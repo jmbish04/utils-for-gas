@@ -1,14 +1,56 @@
-name = "utils-for-gas-worker"
+name = "colby-gas-bridge"
 main = "worker/src/index.ts"
 compatibility_date = "2024-12-23"
+compatibility_flags = ["nodejs_compat"]
 
-# Variable bindings for AI models (example configuration)
-# [ai]
-# binding = "AI"
+# Workers Assets for serving the Remix frontend
+[assets]
+directory = "frontend/build/client"
+binding = "ASSETS"
 
-# Environment variables (add your own)
-# [vars]
-# API_KEY = ""
+# D1 Database for telemetry, AI transcripts, Gmail metadata, and prompts
+[[d1_databases]]
+binding = "DB"
+database_name = "colby-gas-bridge-db"
+database_id = "placeholder-database-id" # Run: wrangler d1 create colby-gas-bridge-db
 
+# Vectorize for Gmail semantic search
+[[vectorize]]
+binding = "VECTORIZE"
+index_name = "gmail-embeddings"
+# Configuration: dimensions = 768, metric = "cosine"
+
+# AI Binding for Llama models
+[ai]
+binding = "AI"
+
+# Durable Objects for the DocAgent
+[[durable_objects.bindings]]
+name = "DOC_AGENT"
+class_name = "DocAgent"
+script_name = "colby-gas-bridge"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["DocAgent"]
+
+# Environment Variables
+[vars]
+ENVIRONMENT = "production"
+
+# Secrets (set via: wrangler secret put WORKER_API_KEY)
+# WORKER_API_KEY = ""
+
+# Observability
 [observability]
 enabled = true
+
+# Development configuration
+[env.dev]
+name = "colby-gas-bridge-dev"
+vars = { ENVIRONMENT = "development" }
+
+[[env.dev.d1_databases]]
+binding = "DB"
+database_name = "colby-gas-bridge-db-dev"
+database_id = "placeholder-dev-database-id"

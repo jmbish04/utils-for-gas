@@ -1,150 +1,132 @@
 import { OpenAPIHono } from '@hono/zod-openapi';
-import { z } from 'zod';
-import { createRoute } from '@hono/zod-openapi';
+import { cors } from 'hono/cors';
+import type { Env } from './types';
+import { authMiddleware } from './middleware/auth';
+import { telemetryMiddleware } from './middleware/telemetry';
+import { aiRoutes } from './routes/ai';
+import { gmailRoutes } from './routes/gmail';
+import { docRoutes } from './routes/doc';
 
-// Define Cloudflare Worker bindings
-type Bindings = {
-  AI?: any; // Cloudflare AI binding (optional)
-};
+/**
+ * Colby-GAS-Bridge Worker
+ *
+ * A dual-ecosystem utility hub:
+ * - Cloudflare Worker: REST APIs, AI Agents, React Frontend
+ * - Google Apps Script: Copy-pasteable utilities and Doc Controller
+ */
 
-// Create the app with OpenAPI support
-const app = new OpenAPIHono<{ Bindings: Bindings }>();
+// Create main app with OpenAPI support
+const app = new OpenAPIHono<{ Bindings: Env }>();
+
+// Apply global middleware
+app.use('*', cors());
+app.use('*', authMiddleware);
+
+// Apply telemetry middleware to API routes only
+app.use('/api/*', telemetryMiddleware);
 
 // Root endpoint
 app.get('/', (c) => {
   return c.json({
-    message: 'Utils for Google Apps Script - Worker API',
+    name: 'Colby-GAS-Bridge',
     version: '1.0.0',
+    description: 'Cloudflare Worker utilities for Google Apps Script',
     endpoints: {
       health: '/health',
-      echo: '/api/echo',
-      textAnalysis: '/api/text-analysis',
-      documentation: '/doc'
-    }
+      documentation: '/doc',
+      api: {
+        ai: {
+          generate: 'POST /api/ai/generate',
+          models: 'GET /api/ai/models',
+        },
+        gmail: {
+          sync: 'POST /api/gmail/sync',
+          distinct: 'GET /api/gmail/distinct',
+          search: 'POST /api/gmail/search',
+        },
+        doc: {
+          configure: 'POST /api/doc/configure',
+          mdToDoc: 'POST /api/doc/md-to-doc',
+          chat: 'POST /api/doc/chat',
+          status: 'GET /api/doc/status',
+        },
+      },
+    },
+    frontend: {
+      dashboard: '/',
+      telemetry: '/telemetry',
+      prompts: '/prompts',
+    },
   });
 });
 
-// Health check endpoint
-const healthRoute = createRoute({
-  method: 'get',
-  path: '/health',
-  responses: {
-    200: {
-      description: 'Health check response',
-      content: {
-        'application/json': {
-          schema: z.object({
-            status: z.string(),
-            timestamp: z.string()
-          })
-        }
-      }
-    }
-  }
-});
-
-app.openapi(healthRoute, (c) => {
+// Health check
+app.get('/health', (c) => {
   return c.json({
     status: 'healthy',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    environment: c.env.ENVIRONMENT,
   });
 });
 
-// Echo endpoint - simple utility for testing
-const echoRoute = createRoute({
-  method: 'post',
-  path: '/api/echo',
-  request: {
-    body: {
-      content: {
-        'application/json': {
-          schema: z.object({
-            message: z.string().describe('Message to echo back')
-          })
-        }
-      }
-    }
-  },
-  responses: {
-    200: {
-      description: 'Echoed message',
-      content: {
-        'application/json': {
-          schema: z.object({
-            echo: z.string(),
-            timestamp: z.string()
-          })
-        }
-      }
-    }
-  }
-});
+// Mount API routes
+app.route('/api/ai', aiRoutes);
+app.route('/api/gmail', gmailRoutes);
+app.route('/api/doc', docRoutes);
 
-app.openapi(echoRoute, (c) => {
-  const { message } = c.req.valid('json');
-  return c.json({
-    echo: message,
-    timestamp: new Date().toISOString()
-  });
-});
-
-// Text analysis endpoint - demonstrates more complex processing
-const textAnalysisRoute = createRoute({
-  method: 'post',
-  path: '/api/text-analysis',
-  request: {
-    body: {
-      content: {
-        'application/json': {
-          schema: z.object({
-            text: z.string().describe('Text to analyze')
-          })
-        }
-      }
-    }
-  },
-  responses: {
-    200: {
-      description: 'Text analysis results',
-      content: {
-        'application/json': {
-          schema: z.object({
-            text: z.string(),
-            wordCount: z.number(),
-            charCount: z.number(),
-            lineCount: z.number(),
-            timestamp: z.string()
-          })
-        }
-      }
-    }
-  }
-});
-
-app.openapi(textAnalysisRoute, (c) => {
-  const { text } = c.req.valid('json');
-  
-  const wordCount = text.trim().split(/\s+/).filter(word => word.length > 0).length;
-  const charCount = text.length;
-  const lineCount = text ? text.split('\n').length : 0;
-  
-  return c.json({
-    text,
-    wordCount,
-    charCount,
-    lineCount,
-    timestamp: new Date().toISOString()
-  });
-});
-
-// OpenAPI documentation endpoint
+// OpenAPI documentation
 app.doc('/doc', {
   openapi: '3.1.0',
   info: {
-    title: 'Utils for Google Apps Script API',
+    title: 'Colby-GAS-Bridge API',
     version: '1.0.0',
-    description: 'REST API providing utilities for Google Apps Script via Cloudflare Workers'
-  }
+    description: `
+# Colby-GAS-Bridge
+
+A dual-repo ecosystem for Cloudflare Workers and Google Apps Script:
+
+## Features
+
+- **AI Services**: Llama 3.3, Vision, and Scout models with transcript logging
+- **Gmail Metadata**: Deduplication and RAG for email processing
+- **Doc Controller Agent**: Markdown-to-Doc conversion with natural language editing
+- **Telemetry**: Comprehensive request tracking and analytics
+- **Frontend Dashboard**: React-based UI for monitoring and configuration
+
+## Authentication
+
+All API endpoints (except frontend assets) require authentication via:
+- \`Authorization: Bearer YOUR_API_KEY\`
+- \`X-API-Key: YOUR_API_KEY\`
+
+## Apps Script Integration
+
+Apps Script clients should include these headers for telemetry:
+- \`X-Appsscript-Id\`
+- \`X-Appsscript-Name\`
+- \`X-Appsscript-Drive-Id\`
+- \`X-Appsscript-Drive-Url\`
+- \`X-Appsscript-Editor-Url\`
+    `.trim(),
+  },
+  servers: [
+    {
+      url: 'https://colby-gas-bridge.workers.dev',
+      description: 'Production',
+    },
+    {
+      url: 'http://localhost:8787',
+      description: 'Development',
+    },
+  ],
 });
 
+// Serve frontend assets (Remix)
+// This will be handled by Workers Assets binding automatically
+// Any unmatched routes will fall through to the assets handler
+
+// Export the worker
 export default app;
+
+// Export Durable Object
+export { DocAgent } from './durable-objects/DocAgent';
