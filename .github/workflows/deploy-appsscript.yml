@@ -1,0 +1,38 @@
+name: Deploy AppsScript
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'appsscript/**'
+      - '.clasp.json'
+      - '.github/workflows/deploy-appsscript.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup clasp credentials
+        run: echo '${{ secrets.CLASP_CREDENTIALS }}' > ~/.clasprc.json
+
+      - name: Push to AppsScript
+        run: npm run appsscript:push
+
+      - name: Deploy AppsScript
+        if: github.event_name == 'workflow_dispatch'
+        run: npm run appsscript:deploy
