@@ -108,7 +108,7 @@ function generateFromTemplate(data) {
   // Simple template replacement
   let message = template;
   for (let key in data) {
-    message = message.replace('{{' + key + '}}', data[key]);
+    message = message.replaceAll('{{' + key + '}}', data[key]);
   }
   
   // Echo it through the worker (could be replaced with more complex processing)
