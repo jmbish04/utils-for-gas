@@ -6,6 +6,7 @@ import { telemetryMiddleware } from './middleware/telemetry';
 import { aiRoutes } from './routes/ai';
 import { gmailRoutes } from './routes/gmail';
 import { docRoutes } from './routes/doc';
+import { kvRoutes } from './routes/kv';
 
 /**
  * Colby-GAS-Bridge Worker
@@ -50,6 +51,17 @@ app.get('/', (c) => {
           chat: 'POST /api/doc/chat',
           status: 'GET /api/doc/status',
         },
+        kv: {
+          set: 'POST /api/kv/set',
+          get: 'GET /api/kv/get',
+          getBulk: 'POST /api/kv/get-bulk',
+          list: 'GET /api/kv/list',
+          listValues: 'POST /api/kv/list-values',
+          search: 'POST /api/kv/search',
+          delete: 'DELETE /api/kv/delete',
+          deleteBulk: 'POST /api/kv/delete-bulk',
+          deletePrefix: 'POST /api/kv/delete-prefix',
+        },
       },
     },
     frontend: {
@@ -73,6 +85,7 @@ app.get('/health', (c) => {
 app.route('/api/ai', aiRoutes);
 app.route('/api/gmail', gmailRoutes);
 app.route('/api/doc', docRoutes);
+app.route('/api/kv', kvRoutes);
 
 // OpenAPI documentation
 app.doc('/doc', {
@@ -90,6 +103,7 @@ A dual-repo ecosystem for Cloudflare Workers and Google Apps Script:
 - **AI Services**: Llama 3.3, Vision, and Scout models with transcript logging
 - **Gmail Metadata**: Deduplication and RAG for email processing
 - **Doc Controller Agent**: Markdown-to-Doc conversion with natural language editing
+- **KV Storage**: Schema-less key-value storage as a Sheets alternative
 - **Telemetry**: Comprehensive request tracking and analytics
 - **Frontend Dashboard**: React-based UI for monitoring and configuration
 

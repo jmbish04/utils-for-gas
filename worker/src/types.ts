@@ -13,6 +13,9 @@ export interface Env {
   // AI Binding for Llama models
   AI: Ai;
 
+  // KV Namespace for schema-less storage
+  KV: KVNamespace;
+
   // Durable Object for DocAgent
   DOC_AGENT: DurableObjectNamespace;
 
@@ -78,4 +81,38 @@ export interface VectorMetadata {
   subject?: string;
   from?: string;
   timestamp: number;
+}
+
+/**
+ * KV Record Structure
+ * Schema-less storage with automatic metadata
+ */
+export interface KVRecord<T = any> {
+  key: string;
+  value: T;
+  metadata?: {
+    createdAt: number;
+    updatedAt: number;
+    createdBy?: string;
+    tags?: string[];
+    [key: string]: any;
+  };
+}
+
+/**
+ * KV List Options
+ */
+export interface KVListOptions {
+  prefix?: string;
+  limit?: number;
+  cursor?: string;
+}
+
+/**
+ * KV Search Options
+ */
+export interface KVSearchOptions {
+  pattern?: string;
+  field?: string;
+  limit?: number;
 }

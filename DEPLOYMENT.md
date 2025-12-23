@@ -64,7 +64,29 @@ wrangler d1 migrations apply colby-gas-bridge-db-dev --env dev
 wrangler vectorize create gmail-embeddings --dimensions=768 --metric=cosine
 ```
 
-### 1.5 Set Secrets
+### 1.5 Create KV Namespace
+
+```bash
+# Production KV namespace
+wrangler kv:namespace create "colby-gas-bridge-kv"
+
+# Development KV namespace
+wrangler kv:namespace create "colby-gas-bridge-kv" --preview
+```
+
+Copy the `id` from each output and update `wrangler.toml`:
+
+```toml
+[[kv_namespaces]]
+binding = "KV"
+id = "YOUR_PRODUCTION_KV_ID"  # Replace this
+
+[[env.dev.kv_namespaces]]
+binding = "KV"
+id = "YOUR_DEV_KV_ID"  # Replace this
+```
+
+### 1.6 Set Secrets
 
 ```bash
 # Generate a secure API key
@@ -197,6 +219,23 @@ curl -X POST https://colby-gas-bridge.YOUR_SUBDOMAIN.workers.dev/api/gmail/sync 
       "lastMessageDate": 1640000000000
     }]
   }'
+```
+
+### Test KV Storage
+
+```bash
+# Set a value
+curl -X POST https://colby-gas-bridge.YOUR_SUBDOMAIN.workers.dev/api/kv/set \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "key": "test:hello",
+    "value": {"message": "Hello from KV!"}
+  }'
+
+# Get the value
+curl "https://colby-gas-bridge.YOUR_SUBDOMAIN.workers.dev/api/kv/get?key=test:hello" \
+  -H "X-API-Key: YOUR_API_KEY"
 ```
 
 ## Part 4: Frontend Access

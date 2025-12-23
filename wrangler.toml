@@ -24,6 +24,11 @@ index_name = "gmail-embeddings"
 [ai]
 binding = "AI"
 
+# KV Namespace for schema-less key-value storage
+[[kv_namespaces]]
+binding = "KV"
+id = "placeholder-kv-id" # Run: wrangler kv:namespace create "colby-gas-bridge-kv"
+
 # Durable Objects for the DocAgent
 [[durable_objects.bindings]]
 name = "DOC_AGENT"
@@ -54,3 +59,7 @@ vars = { ENVIRONMENT = "development" }
 binding = "DB"
 database_name = "colby-gas-bridge-db-dev"
 database_id = "placeholder-dev-database-id"
+
+[[env.dev.kv_namespaces]]
+binding = "KV"
+id = "placeholder-dev-kv-id" # Run: wrangler kv:namespace create "colby-gas-bridge-kv" --preview
