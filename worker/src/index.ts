@@ -126,7 +126,7 @@ app.openapi(textAnalysisRoute, (c) => {
   
   const wordCount = text.trim().split(/\s+/).filter(word => word.length > 0).length;
   const charCount = text.length;
-  const lineCount = text.split('\n').length;
+  const lineCount = text ? text.split('\n').length : 0;
   
   return c.json({
     text,
