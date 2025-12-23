@@ -1,25 +1,4 @@
-function onInstall(e) {
-  onOpen(e);
-}
 
-function onOpen() {
-  DocumentApp.getUi().createMenu('md2gdoc')
-    .addItem('Import Markdown', 'showImport')
-    .addToUi();
-}
-
-function showImport() {
-  DocumentApp.getUi().showDialog(
-    HtmlService.createTemplateFromFile('markdownit').evaluate()
-      .setSandboxMode(HtmlService.SandboxMode.NATIVE)
-      .setTitle('md2gdoc')
-      .setWidth(720)
-      .setHeight(400));
-}
-
-function include(file) {
-  return HtmlService.createTemplateFromFile(file).evaluate().getContent();
-}
 
 function preprocess(markdown) {
   markdown = markdown.replace(/<hr>/g, '<hr></hr>');
