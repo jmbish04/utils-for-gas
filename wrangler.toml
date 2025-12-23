@@ -1,0 +1,14 @@
+name = "utils-for-gas-worker"
+main = "worker/src/index.ts"
+compatibility_date = "2024-12-23"
+
+# Variable bindings for AI models (example configuration)
+# [ai]
+# binding = "AI"
+
+# Environment variables (add your own)
+# [vars]
+# API_KEY = ""
+
+[observability]
+enabled = true

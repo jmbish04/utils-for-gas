@@ -137,3 +137,16 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Google Apps Script
+.clasprc.json
+appsscript/dist/
+
+# Cloudflare Workers
+worker/dist/
+.wrangler/
+.dev.vars
+
+# Environment files
+.env.local
+.env.production
