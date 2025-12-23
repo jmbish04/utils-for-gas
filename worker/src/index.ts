@@ -7,6 +7,7 @@ import { aiRoutes } from './routes/ai';
 import { gmailRoutes } from './routes/gmail';
 import { docRoutes } from './routes/doc';
 import { kvRoutes } from './routes/kv';
+import { kvEnhancedRoutes } from './routes/kv-enhanced';
 
 /**
  * Colby-GAS-Bridge Worker
@@ -86,6 +87,7 @@ app.route('/api/ai', aiRoutes);
 app.route('/api/gmail', gmailRoutes);
 app.route('/api/doc', docRoutes);
 app.route('/api/kv', kvRoutes);
+app.route('/api/kv-enhanced', kvEnhancedRoutes);
 
 // OpenAPI documentation
 app.doc('/doc', {

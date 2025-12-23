@@ -9,6 +9,7 @@ A dual-ecosystem platform connecting **Cloudflare Workers** and **Google Apps Sc
 - **AI Services**: Llama 3.3, Vision, and Scout models with transcript logging
 - **Gmail Metadata**: Deduplication and semantic search using Vectorize
 - **Doc Controller Agent**: Markdown-to-Doc conversion with natural language editing
+- **KV Storage**: Production-grade SQL-ish layer with indexes, search, and bulk operations
 - **Telemetry**: Comprehensive request tracking and analytics
 - **Dashboard**: React-based UI with True Dark theme
 
@@ -23,6 +24,11 @@ A dual-ecosystem platform connecting **Cloudflare Workers** and **Google Apps Sc
 │  │   AI API     │  │  Gmail API   │  │   Doc Agent  │      │
 │  │   (Llama)    │  │  (Vectorize) │  │  (Durable)   │      │
 │  └──────────────┘  └──────────────┘  └──────────────┘      │
+│                                                               │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │           KV-Enhanced (SQL-ish Storage Layer)        │   │
+│  │     Indexes, Search, Bulk Ops, WHERE/AND/OR          │   │
+│  └──────────────────────────────────────────────────────┘   │
 │                                                               │
 │  ┌──────────────────────────────────────────────────────┐   │
 │  │           Telemetry Middleware (D1)                  │   │
@@ -124,7 +130,49 @@ client.markdownToDoc(markdown, DOC_ID);
 client.chatWithDoc('Make all headers blue', DOC_ID);
 ```
 
-### 4. Telemetry Dashboard
+### 4. KV-Enhanced Storage
+
+Production-grade SQL-ish storage layer with automatic indexing, search, and bulk operations:
+
+```javascript
+// Create a prompt with automatic indexing
+kvRequest('POST', '/prompt', {
+  name: 'email-helper',
+  category: 'email',
+  version: 1,
+  isActive: true,
+  description: 'Helps write professional emails',
+  content: 'You are an expert at writing clear, concise business emails.',
+});
+
+// Query with WHERE filters (AND)
+const emailPrompts = kvRequest('GET', '/prompt?where=category:email&and=isActive:true');
+
+// Full-text search
+const results = kvRequest('GET', '/prompt?q=professional+business');
+
+// Sort by time (descending)
+const recent = kvRequest('GET', '/prompt?sort=createdAt:desc&limit=10');
+
+// Bulk update
+kvRequest('POST', '/task/bulk/updateWhere', {
+  and: ['status:pending'],
+  patch: { status: 'in-progress' },
+  limit: 50,
+});
+```
+
+**Features**:
+- WHERE queries with AND/OR filters
+- Full-text search with ranking
+- Time-based sorting (ascending/descending)
+- Bulk operations (upsert, patch, delete)
+- Automatic index maintenance
+- Type configuration system
+
+See **[KV-ENHANCED.md](./KV-ENHANCED.md)** for complete documentation.
+
+### 5. Telemetry Dashboard
 
 Every API call is automatically logged with Apps Script context:
 
@@ -142,6 +190,7 @@ Access the dashboard at: `https://your-worker.workers.dev`
 
 - **Framework**: Hono v4+ with Zod validation
 - **Database**: D1 (SQLite) with Drizzle ORM
+- **Storage**: KV with custom indexing layer (SQL-ish operations)
 - **Vector Search**: Vectorize (768-dimensional embeddings)
 - **AI**: Workers AI (Llama models)
 - **State**: Durable Objects (DocAgent orchestrator)
@@ -210,6 +259,7 @@ See **[DEPLOYMENT.md](./DEPLOYMENT.md)** for complete setup instructions.
 ## Documentation
 
 - **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Complete deployment guide
+- **[KV-ENHANCED.md](./KV-ENHANCED.md)** - KV storage layer documentation
 - **[EXAMPLES.md](./EXAMPLES.md)** - Usage examples
 - **[WORKER_AI_GUIDE.md](./WORKER_AI_GUIDE.md)** - AI services reference
 - **[QUICKSTART.md](./QUICKSTART.md)** - Getting started guide
@@ -233,13 +283,22 @@ colby-gas-bridge/
 │   │   ├── db/
 │   │   │   ├── schema.ts          # Drizzle ORM schema
 │   │   │   └── client.ts          # Database client
+│   │   ├── kv/
+│   │   │   ├── types.ts           # Type configuration
+│   │   │   ├── indexes.ts         # Index key generators
+│   │   │   ├── tokenizer.ts       # Text tokenization
+│   │   │   ├── crud.ts            # CRUD operations
+│   │   │   ├── query.ts           # Query engine
+│   │   │   └── bulk.ts            # Bulk operations
 │   │   ├── middleware/
 │   │   │   ├── auth.ts            # API key validation
 │   │   │   └── telemetry.ts       # Request logging
 │   │   ├── routes/
 │   │   │   ├── ai.ts              # AI generation endpoints
 │   │   │   ├── gmail.ts           # Gmail metadata endpoints
-│   │   │   └── doc.ts             # Doc Controller endpoints
+│   │   │   ├── doc.ts             # Doc Controller endpoints
+│   │   │   ├── kv.ts              # Basic KV endpoints
+│   │   │   └── kv-enhanced.ts     # Enhanced KV endpoints
 │   │   ├── durable-objects/
 │   │   │   └── DocAgent.ts        # Document orchestrator
 │   │   ├── types.ts               # TypeScript types
@@ -253,7 +312,8 @@ colby-gas-bridge/
 │       └── styles/                # Global CSS
 ├── appsscript/
 │   ├── WorkerClient.gs            # Apps Script client library
-│   └── DocController.gs           # Doc Controller Web App
+│   ├── DocController.gs           # Doc Controller Web App
+│   └── KV_Enhanced_Test.gs        # KV test harness
 ├── wrangler.toml                  # Cloudflare configuration
 ├── drizzle.config.ts              # Drizzle Kit configuration
 ├── vite.config.ts                 # Vite configuration
