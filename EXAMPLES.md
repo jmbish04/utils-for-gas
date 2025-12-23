@@ -71,10 +71,10 @@ function analyzeEmails() {
   });
   
   // Write results to sheet
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Email Analysis');
+  let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Email Analysis');
   if (!sheet) {
-    const newSheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet('Email Analysis');
-    newSheet.appendRow(['Subject', 'From', 'Word Count', 'Char Count', 'Category']);
+    sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet('Email Analysis');
+    sheet.appendRow(['Subject', 'From', 'Word Count', 'Char Count', 'Category']);
   }
   
   results.forEach(result => {
