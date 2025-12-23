@@ -28,7 +28,10 @@ jobs:
         run: npm ci
 
       - name: Setup clasp credentials
-        run: echo '${{ secrets.CLASP_CREDENTIALS }}' > ~/.clasprc.json
+        run: |
+          cat << 'EOF' > ~/.clasprc.json
+          ${{ secrets.CLASP_CREDENTIALS }}
+          EOF
 
       - name: Push to AppsScript
         run: npm run appsscript:push
