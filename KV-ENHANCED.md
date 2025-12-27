@@ -873,7 +873,7 @@ const admins = kvRequest('GET', '/user?where=role:admin');
 - Max field value length: 1000 characters (configurable per type)
 - Max record size: 100 KB (configurable per type)
 - Type validation: Unknown types are rejected
-- ID validation: Alphanumeric, dash, underscore only (max 100 chars)
+- ID validation: Alphanumeric, dash, underscore only (max 200 chars)
 
 ### Rate Limiting
 
