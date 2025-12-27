@@ -97,7 +97,7 @@ wrangler secret put WORKER_API_KEY
 # Paste the generated key when prompted
 ```
 
-### 1.6 Build Frontend
+### 1.7 Build Frontend
 
 ```bash
 npm run build:frontend
