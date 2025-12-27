@@ -7,7 +7,7 @@
 
 // Configuration
 const WORKER_URL = 'https://colby-gas-bridge.workers.dev'; // Update this
-const API_KEY = 'your-api-key-here'; // Update this
+const API_KEY = PropertiesService.getScriptProperties().getProperty('WORKER_API_KEY'); // Update this
 const BASE_URL = `${WORKER_URL}/api/kv-enhanced`;
 
 /**
