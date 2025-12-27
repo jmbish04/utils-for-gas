@@ -24,7 +24,7 @@ export async function authMiddleware(c: Context<{ Bindings: Env }>, next: Next) 
                       c.req.header('X-API-Key');
 
   if (!c.env.WORKER_API_KEY) {
-    console.error('CRITICAL: WORKER_API_KEY is not configured. Denying request.');
+    console.error('CRITICAL: WORKER_API_KEY is not configured. Denying access.');
     return c.json({ error: 'Unauthorized', message: 'Server configuration error' }, 500);
   }
 
