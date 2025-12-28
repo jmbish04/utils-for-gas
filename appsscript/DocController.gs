@@ -107,7 +107,7 @@ function verifyAuth(e) {
 
   // If no auth token configured, allow in development
   if (!AUTH_TOKEN) {
-    Logger.log('ERROR: No AUTH_TOKEN configured. Authentication is required. Set DOC_CONTROLLER_AUTH_TOKEN in Script Properties.');
+    Logger.log('CRITICAL: No AUTH_TOKEN configured. Access denied. Set DOC_CONTROLLER_AUTH_TOKEN in Script Properties.');
     return false;
   }
 
