@@ -188,6 +188,212 @@ Access the dashboard at: `https://your-worker.workers.dev`
 
 ### Cloudflare Worker
 
+## 📚 Available API Endpoints
+
+### Health Check
+- **Endpoint:** `GET /health`
+- **Description:** Check if the worker is running
+- **Response:**
+  ```json
+  {
+    "status": "healthy",
+    "timestamp": "2024-12-23T07:00:00.000Z"
+  }
+  ```
+
+### Echo
+- **Endpoint:** `POST /api/echo`
+- **Description:** Echo back a message (useful for testing)
+- **Request:**
+  ```json
+  {
+    "message": "Hello World"
+  }
+  ```
+- **Response:**
+  ```json
+  {
+    "echo": "Hello World",
+    "timestamp": "2024-12-23T07:00:00.000Z"
+  }
+  ```
+
+### Text Analysis
+- **Endpoint:** `POST /api/text-analysis`
+- **Description:** Analyze text and return statistics
+- **Request:**
+  ```json
+  {
+    "text": "Your text here"
+  }
+  ```
+- **Response:**
+  ```json
+  {
+    "text": "Your text here",
+    "wordCount": 3,
+    "charCount": 14,
+    "lineCount": 1,
+    "timestamp": "2024-12-23T07:00:00.000Z"
+  }
+  ```
+
+### OpenAPI Documentation
+- **Endpoint:** `GET /doc`
+- **Description:** OpenAPI specification for all endpoints
+
+## 🎯 Apps Script Integration Examples
+
+The repository includes several `.gs` files demonstrating different integration patterns:
+
+### Config.gs
+- Worker API configuration and connection helper
+- Test function: `testWorkerConnection()`
+
+### EchoAPI.gs
+- Simple echo functionality
+- Custom function: `=WORKER_ECHO("message")`
+- Test function: `testEchoAPI()`
+
+### TextAnalysisAPI.gs
+- Text analysis utilities
+- Custom functions: `=WORKER_WORD_COUNT("text")`, `=WORKER_CHAR_COUNT("text")`
+- Batch processing: `batchAnalyzeTexts(range)`
+- Test function: `testTextAnalysisAPI()`
+
+### Main.gs
+- Custom menu in Google Sheets
+- `onOpen()` - Adds "Worker Utils" menu
+- `runAllTests()` - Runs all API tests
+- `processSheetData()` - Example batch processing
+
+## 🔧 Development Workflow
+
+### For Cloudflare Worker
+
+1. Make changes to `worker/src/index.ts`
+2. Test locally: `npm run worker:dev`
+3. Deploy: `npm run worker:deploy`
+
+### For Apps Script
+
+1. Make changes to `.gs` files in `appsscript/src/`
+2. Push to Apps Script: `npm run appsscript:push`
+3. Test in the Apps Script editor or Google Sheets
+
+## 🚀 CI/CD Automated Deployment
+
+This repository includes GitHub Actions workflows for automated deployment of both the Cloudflare Worker and Google Apps Script.
+
+### Workflows
+
+#### 1. Deploy Cloudflare Worker (`deploy-worker.yml`)
+- **Triggers:** 
+  - Automatically on push to `main` branch when changes are made to `worker/`, `wrangler.toml`, or `package.json`
+  - Manually via GitHub Actions UI (workflow_dispatch)
+- **What it does:** Deploys the worker to Cloudflare Workers using Wrangler
+
+#### 2. Deploy AppsScript (`deploy-appsscript.yml`)
+- **Triggers:**
+  - Automatically on push to `main` branch when changes are made to `appsscript/` or `.clasp.json`
+  - Manually via GitHub Actions UI (workflow_dispatch)
+- **What it does:** 
+  - Pushes changes to Google Apps Script using clasp
+  - Optionally creates a new deployment (manual trigger only)
+
+### Setting Up GitHub Secrets
+
+To enable automated deployments, you need to configure the following GitHub repository secrets:
+
+#### For Cloudflare Worker Deployment
+
+1. **CLOUDFLARE_API_TOKEN**: Your Cloudflare API token with Workers deployment permissions
+   
+   To create the token:
+   - Go to [Cloudflare Dashboard](https://dash.cloudflare.com/profile/api-tokens)
+   - Click "Create Token"
+   - Use the "Edit Cloudflare Workers" template or create a custom token with:
+     - Permissions: `Account > Cloudflare Workers Scripts > Edit`
+   - Copy the generated token
+   - Add it to GitHub: Repository Settings > Secrets and variables > Actions > New repository secret
+   - Name: `CLOUDFLARE_API_TOKEN`
+   - Value: Paste your token
+
+#### For Google Apps Script Deployment
+
+1. **CLASP_CREDENTIALS**: Your clasp authentication credentials
+
+   To get your credentials:
+   ```bash
+   # Login to clasp locally
+   npx clasp login
+   
+   # Copy the contents of the credentials file
+   cat ~/.clasprc.json
+   ```
+   
+   - Copy the entire JSON content from `~/.clasprc.json`
+   - Add it to GitHub: Repository Settings > Secrets and variables > Actions > New repository secret
+   - Name: `CLASP_CREDENTIALS`
+   - Value: Paste the entire JSON object
+
+   **Note:** The `.clasp.json` file in your repository should contain your script ID. Make sure this is committed:
+   ```json
+   {
+     "scriptId": "your-script-id-here",
+     "rootDir": "./appsscript"
+   }
+   ```
+
+### Manual Deployment
+
+To manually trigger a deployment:
+
+1. Go to your repository on GitHub
+2. Click on "Actions" tab
+3. Select either "Deploy Cloudflare Worker" or "Deploy AppsScript" workflow
+4. Click "Run workflow" button
+5. Select the branch (usually `main`)
+6. Click "Run workflow"
+
+### Monitoring Deployments
+
+- View deployment status in the "Actions" tab of your GitHub repository
+- Click on any workflow run to see detailed logs
+- Failed deployments will show error messages to help troubleshoot
+
+## 📝 Adding New API Endpoints
+
+### 1. Add to Worker (`worker/src/index.ts`)
+
+```typescript
+const newRoute = createRoute({
+  method: 'post',
+  path: '/api/new-endpoint',
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            input: z.string()
+          })
+        }
+      }
+    }
+  },
+  responses: {
+    200: {
+      description: 'Success response',
+      content: {
+        'application/json': {
+          schema: z.object({
+            result: z.string()
+          })
+        }
+      }
+    }
+  }
+});
 - **Framework**: Hono v4+ with Zod validation
 - **Database**: D1 (SQLite) with Drizzle ORM
 - **Storage**: KV with custom indexing layer (SQL-ish operations)
@@ -333,6 +539,26 @@ npm run db:generate
 
 # Open Drizzle Studio
 npm run db:studio
+```
+utils-for-gas/
+├── .github/               # GitHub Actions workflows
+│   └── workflows/
+│       ├── deploy-appsscript.yml  # AppsScript deployment
+│       └── deploy-worker.yml      # Cloudflare Worker deployment
+├── worker/                 # Cloudflare Worker
+│   └── src/
+│       └── index.ts       # Main worker application
+├── appsscript/            # Google Apps Script
+│   ├── src/
+│   │   ├── Config.gs      # Configuration & API helper
+│   │   ├── EchoAPI.gs     # Echo integration
+│   │   ├── TextAnalysisAPI.gs  # Text analysis integration
+│   │   └── Main.gs        # Menu & utilities
+│   └── appsscript.json    # Apps Script manifest
+├── .clasp.json            # Clasp configuration
+├── wrangler.toml          # Wrangler configuration
+├── tsconfig.json          # TypeScript configuration
+└── package.json           # Project dependencies
 ```
 
 ### Making Schema Changes
