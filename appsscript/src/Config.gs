@@ -3,51 +3,80 @@
  * IMPORTANT: Update WORKER_URL with your deployed Cloudflare Worker URL
  */
 const CONFIG = {
-  WORKER_URL: 'https://your-worker.your-subdomain.workers.dev',
-  // Add API keys or authentication tokens here if needed
-  // API_KEY: 'your-api-key'
+  WORKER_URL: 'https://your-worker.your-subdomain.workers.dev'
 };
 
 /**
- * Makes an HTTP request to the worker API
+ * Collect Apps Script + Drive metadata
+ */
+function getAppsScriptContext() {
+  const scriptId = ScriptApp.getScriptId();
+
+  let driveId = '';
+  let driveUrl = '';
+  let name = '';
+
+  try {
+    const file = DriveApp.getFileById(scriptId);
+    driveId = file.getId();
+    driveUrl = file.getUrl();
+    name = file.getName();
+  } catch (e) {
+    // Common for container-bound scripts
+    name = 'Unknown Apps Script Project';
+  }
+
+  return {
+    scriptId,
+    name,
+    driveId,
+    driveUrl,
+    editorUrl: `https://script.google.com/d/${scriptId}/edit`
+  };
+}
+
+/**
+ * Makes an HTTP request to the Worker API
  * @param {string} endpoint - API endpoint path
  * @param {string} method - HTTP method (GET, POST, etc.)
- * @param {Object} payload - Request payload for POST requests
- * @returns {Object} - Parsed JSON response
+ * @param {Object} payload - Request payload for POST/PUT
+ * @returns {Object|null} - Parsed JSON response
  */
 function callWorkerAPI(endpoint, method, payload) {
   const url = CONFIG.WORKER_URL + endpoint;
-  
+  const context = getAppsScriptContext();
+
   const options = {
-    method: method,
+    method,
     contentType: 'application/json',
-    muteHttpExceptions: true
+    muteHttpExceptions: true,
+    headers: {
+      'X-Appsscript-Id': context.scriptId,
+      'X-Appsscript-Name': context.name,
+      'X-Appsscript-Drive-Id': context.driveId,
+      'X-Appsscript-Drive-Url': context.driveUrl,
+      'X-Appsscript-Editor-Url': context.editorUrl
+    }
   };
-  
-  // Add headers if API key is configured
-  // if (CONFIG.API_KEY) {
-  //   options.headers = {
-  //     'Authorization': 'Bearer ' + CONFIG.API_KEY
-  //   };
-  // }
-  
-  if (payload) {
+
+  // Only attach body for non-GET requests
+  if (method !== 'GET' && payload !== undefined) {
     options.payload = JSON.stringify(payload);
   }
-  
+
   try {
     const response = UrlFetchApp.fetch(url, options);
-    const responseCode = response.getResponseCode();
-    const responseText = response.getContentText();
-    
-    if (responseCode >= 200 && responseCode < 300) {
-      return JSON.parse(responseText);
-    } else {
-      throw new Error('API Error: ' + responseCode + ' - ' + responseText);
+    const status = response.getResponseCode();
+    const text = response.getContentText();
+
+    if (status >= 200 && status < 300) {
+      return text ? JSON.parse(text) : null;
     }
-  } catch (error) {
-    Logger.log('Error calling Worker API: ' + error.toString());
-    throw error;
+
+    throw new Error(`Worker API error ${status}: ${text}`);
+  } catch (err) {
+    Logger.log('Error calling Worker API: ' + err);
+    throw err;
   }
 }
 
@@ -60,7 +89,7 @@ function testWorkerConnection() {
     Logger.log('Worker health check: ' + JSON.stringify(result));
     return result;
   } catch (error) {
-    Logger.log('Failed to connect to worker: ' + error.toString());
+    Logger.log('Failed to connect to worker: ' + error);
     return null;
   }
 }
